@@ -336,6 +336,12 @@ declare_lint! {
 }
 
 declare_lint! {
+    pub CRATER_RUN,
+    Deny,
+    "crater run"
+}
+
+declare_lint! {
     pub MACRO_EXPANDED_MACRO_EXPORTS_ACCESSED_BY_ABSOLUTE_PATHS,
     Deny,
     "macro-expanded `macro_export` macros from the current crate \

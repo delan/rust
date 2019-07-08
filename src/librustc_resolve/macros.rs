@@ -1012,10 +1012,17 @@ impl<'a> Resolver<'a> {
 
     fn check_stability_and_deprecation(&self, ext: &SyntaxExtension, path: &str, span: Span) {
         if let Some(stability) = &ext.stability {
-            if let StabilityLevel::Unstable { reason, issue } = stability.level {
+            if let StabilityLevel::Unstable { .. } = stability.level {
                 let feature = stability.feature;
                 if !self.active_features.contains(&feature) && !span.allows_unstable(feature) {
-                    stability::report_unstable(self.session, feature, reason, issue, span);
+                    if !self.session.opts.debugging_opts.force_unstable_if_unmarked {
+                        self.session.buffer_lint(
+                            lint::builtin::CRATER_RUN,
+                            ast::CRATE_NODE_ID,
+                            span,
+                            &format!("`{}` is unstable", path),
+                        );
+                    }
                 }
             }
             if let Some(depr) = &stability.rustc_depr {

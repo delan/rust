@@ -138,9 +138,16 @@ pub fn register_builtins(resolver: &mut dyn syntax::ext::base::Resolver,
     register(sym::test, SyntaxExtension::default(
         SyntaxExtensionKind::LegacyAttr(Box::new(test::expand_test)), edition
     ));
-    register(sym::bench, SyntaxExtension::default(
-        SyntaxExtensionKind::LegacyAttr(Box::new(test::expand_bench)), edition
-    ));
+    register(sym::bench, SyntaxExtension {
+        stability: Some(Stability::unstable(
+            sym::test,
+            Some(Symbol::intern("bench crater run")),
+            0,
+        )),
+        ..SyntaxExtension::default(
+            SyntaxExtensionKind::LegacyAttr(Box::new(test::expand_bench)), edition
+        )
+    });
 
     // format_args uses `unstable` things internally.
     let allow_internal_unstable = Some([sym::fmt_internals][..].into());
