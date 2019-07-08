@@ -2,7 +2,7 @@
 
 use rustc_data_structures::sync::Lrc;
 use syntax::ast::{self, MetaItem};
-use syntax::attr::Deprecation;
+use syntax::attr::Stability;
 use syntax::edition::Edition;
 use syntax::ext::base::{Annotatable, ExtCtxt, Resolver, MultiItemModifier};
 use syntax::ext::base::{SyntaxExtension, SyntaxExtensionKind};
@@ -61,7 +61,7 @@ impl MultiItemModifier for BuiltinDerive {
 }
 
 macro_rules! derive_traits {
-    ($( [$deprecation:expr] $name:ident => $func:path, )+) => {
+    ($( [$stability:expr] $name:ident => $func:path, )+) => {
         pub fn is_builtin_trait(name: ast::Name) -> bool {
             match name {
                 $( sym::$name )|+ => true,
@@ -82,10 +82,7 @@ macro_rules! derive_traits {
                 resolver.add_builtin(
                     ast::Ident::with_empty_ctxt(sym::$name),
                     Lrc::new(SyntaxExtension {
-                        deprecation: $deprecation.map(|msg| Deprecation {
-                            since: Some(Symbol::intern("1.0.0")),
-                            note: Some(Symbol::intern(msg)),
-                        }),
+                        stability: $stability,
                         allow_internal_unstable: allow_internal_unstable.clone(),
                         ..SyntaxExtension::default(
                             SyntaxExtensionKind::LegacyDerive(Box::new(BuiltinDerive($func))),
@@ -105,10 +102,14 @@ derive_traits! {
     [None]
     Hash => hash::expand_deriving_hash,
 
-    [None]
+    [Some(Stability::unstable(
+        sym::rustc_private, Some(Symbol::intern("RustcEncodable crater run")), 0
+    ))]
     RustcEncodable => encodable::expand_deriving_rustc_encodable,
 
-    [None]
+    [Some(Stability::unstable(
+        sym::rustc_private, Some(Symbol::intern("RustcDecodable crater run")), 0
+    ))]
     RustcDecodable => decodable::expand_deriving_rustc_decodable,
 
     [None]
@@ -130,9 +131,9 @@ derive_traits! {
     Copy => bounds::expand_deriving_copy,
 
     // deprecated
-    [Some("derive(Encodable) is deprecated in favor of derive(RustcEncodable)")]
+    [Some(Stability::unstable(sym::rustc_private, Some(Symbol::intern("Encodable crater run")), 0))]
     Encodable => encodable::expand_deriving_encodable,
-    [Some("derive(Decodable) is deprecated in favor of derive(RustcDecodable)")]
+    [Some(Stability::unstable(sym::rustc_private, Some(Symbol::intern("Decodable crater run")), 0))]
     Decodable => decodable::expand_deriving_decodable,
 }
 
